@@ -21,6 +21,16 @@ var create = function() {
     sphere2 = new THREE.Mesh( geometrySphere, materialPurple );
     cylinder2 = new THREE.Mesh( geometryCylinder, materialTurqoise );
 
+    chao = new THREE.Mesh( new THREE.PlaneGeometry(200,200), materialWhite)
+    chao2 = new THREE.Mesh( new THREE.PlaneGeometry(200,200), materialWhite)
+    chao.position.y-=50
+    chao2.position.y-=50
+    chao.rotateX(toRadians(-90))
+    chao2.rotateX(toRadians(90))
+
+    scene.add(chao)
+    scene.add(chao2)
+
     scene.add( box );
     scene.add( sphere );
     scene.add( cylinder );
