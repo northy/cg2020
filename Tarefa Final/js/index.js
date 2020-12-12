@@ -2,13 +2,14 @@ var scene;
 var camera;
 var renderer;
 
-var velocity = 0.1;
+var velocity = 0.017;
 
 var ground;
 var pivot;
+var controls;
 
 var textureLoader;
-
+var loaded = false, loadedSound= false, dancing = true;
 var vaca;
 
 var spotLight;
@@ -19,14 +20,21 @@ var criaGround = function (){
     textureLoader = new THREE.TextureLoader();
     groundTexture = textureLoader.load('assets/textura/terrain/grasslight-big.jpg');
     groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set( 20, 20 );
+    groundTexture.repeat.set( 10, 10 );
     groundTexture.anisotropy = 16;
     groundTexture.encoding = THREE.sRGBEncoding;
 
+    groundNormal = textureLoader.load('assets/textura/terrain/grasslight-big-nm.jpg');
+    groundNormal.wrapS = groundNormal.wrapT = THREE.RepeatWrapping;
+    groundNormal.repeat.set( 10, 10 );
+    groundNormal.anisotropy = 16;
+    
     ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(1050, 1050, 25,25),
+        new THREE.PlaneGeometry(2048, 2048, 25,25),
         new THREE.MeshBasicMaterial({map : groundTexture})
     );
+
+    ground.material.normalMap = groundNormal
 
     ground.rotation.x -= Math.PI / 2;
     ground.position.y=-2;
@@ -60,7 +68,7 @@ var loadObj = function(){
 
             vaca.position.z = 20;
             vaca.position.x = 0;
-            vaca.position.y = 0;
+            vaca.position.y = -1.5;
 
             vaca.rotation.y = 0.6
 
@@ -80,7 +88,8 @@ var loadObj = function(){
 
             vaca.castShadow = true;
 
-            scene.add(vaca);    
+            scene.add(vaca);
+            loaded = true;
         },//metodo, tudo deu certo
         function( andamento) {
             console.log((andamento.loaded / andamento.total *100) + "% pronto vaca!");
@@ -107,6 +116,7 @@ const criaMusica = function() {
         sound.setBuffer( buffer );
         sound.setLoop( true );
         sound.setVolume( 0.3 );
+        loadedSound = true
     });
 }
 
@@ -114,16 +124,27 @@ var guiFunction = function(){
     const gui = new dat.GUI();
 
     param = {
-        rotacao: 0,
+        dancing: true,
+        speed: 1,
         volume: 30,
-        play: () => {sound.play()},
+        play: () => {sound.pause(); sound.play()},
         pause: () => {sound.pause()},
         restart: () => {sound.stop(); sound.play()}
     };
 
-    let rotacao = gui.add(param, 'rotacao').min(0).max(360).name("Rotation");
-    rotacao.onChange(function (param){
-        pivot.rotation.y = toRadians(param)
+    let dance = gui.add(param, 'dancing').name("Dancing");
+    dance.onChange(function (param){
+        dancing = param
+    })
+
+    let speed = gui.add(param, 'speed').min(0.5).max(2).name("Speed");
+    speed.onChange(function (OldValue){
+        OldMax = 2; OldMin=0.5
+        NewMax = 0.034; NewMin = 0.0085
+        OldRange = (OldMax - OldMin)
+        NewRange = (NewMax - NewMin)  
+        NewValue = (((OldValue - OldMin) * NewRange) / OldRange) + NewMin
+        velocity = NewValue
     });
 
     let pastaMus = gui.addFolder("Music");
@@ -143,7 +164,6 @@ var guiFunction = function(){
 };
 
 var init = function() {
-
     scene = new THREE.Scene();
     scene.background = new THREE.Color( 0xcce0ff );
 
@@ -151,7 +171,7 @@ var init = function() {
 
     renderer = new THREE.WebGLRenderer();
     
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth-window.innerWidth*0.0001, window.innerHeight-window.innerHeight*0.005);
     document.body.appendChild(renderer.domElement);
 
     loadObj();
@@ -194,6 +214,13 @@ var init = function() {
     
     scene.add(ambient);
 
+    controls = new THREE.OrbitControls( camera, renderer.domElement );
+    controls.enableDamping = true;   //damping 
+    controls.dampingFactor = 0.25;   //damping inertia
+    controls.enablePan = false;   //pan 
+    controls.enableZoom = true;      //Zooming
+    controls.maxPolarAngle = Math.PI / 2; // Limit angle of visibility
+
     criaGround();
 
     guiFunction();
@@ -207,10 +234,11 @@ var ci = 0
 var render = function() {
     requestAnimationFrame( render );
 
-    try {
-        mixer.update(0.01)
+    controls.update()
+
+    if (dancing && loaded && loadedSound) {
+        mixer.update(velocity)
     }
-    catch {}
 
     renderer.render( scene, camera );
 };
