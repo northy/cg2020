@@ -38,6 +38,7 @@ var criaGround = function (){
 
     ground.rotation.x -= Math.PI / 2;
     ground.position.y=-2;
+    ground.receiveShadow = true;
 
     scene.add(ground);
 };
@@ -50,6 +51,7 @@ var loadObj = function(){
     gltfLoader.load(
         'assets/models/vaca.glb', //arquivo que vamos carregar
         function(object){
+            object.castShadow = true;
             vaca = object.scene;
 
             vaca.traverse( function ( child ) {
@@ -171,8 +173,12 @@ var init = function() {
 
     renderer = new THREE.WebGLRenderer();
     
-    renderer.setSize(window.innerWidth-window.innerWidth*0.0001, window.innerHeight-window.innerHeight*0.005);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+
+    renderer.shadowMap.enabled = true;
+    //renderer.shadowMap.type = THREE.BasicShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     loadObj();
 
@@ -181,18 +187,20 @@ var init = function() {
 
     //Iluminação 
     spotLight = new THREE.SpotLight(0xffffff, 1);
-    spotLight.angle = 0.7;
+    spotLight.angle = 0.8;
     spotLight.position.y = 40;
     spotLight.position.z = 80;
-    spotLight.castShadow = true;
+    spotLight.intensity = 1;
 
-    spotLight.shadow.distance = 30;
+    spotLight.castShadow = true;
+    spotLight.shadow.distance = 100;
     spotLight.shadow.penumbra = 30;
-    spotLight.shadow.angle = 25;
+    spotLight.shadow.angle = 35;
 
     scene.add(spotLight);
 
-    spotLight.intensity = 1;
+    //const helper = new THREE.CameraHelper( spotLight.shadow.camera );
+    //scene.add( helper );
 
     //helperSpot = new THREE.SpotLightHelper(spotLight);
     //scene.add(helperSpot);
@@ -204,9 +212,6 @@ var init = function() {
     pivot.add(camera)
     scene.add(pivot)
 
-    renderer.shadowMap.enable = true;
-    renderer.shadowMap.type = THREE.BasicShadowMap;
-
     scene.fog = new THREE.Fog( 0xcce0ff, 200, 500 );
 
     ambient = new THREE.AmbientLight( 0xffffff )
@@ -217,7 +222,7 @@ var init = function() {
     controls = new THREE.OrbitControls( camera, renderer.domElement );
     controls.enableDamping = true;   //damping 
     controls.dampingFactor = 0.25;   //damping inertia
-    controls.enablePan = false;   //pan 
+    controls.enablePan = false;      //pan 
     controls.enableZoom = true;      //Zooming
     controls.maxPolarAngle = Math.PI / 2; // Limit angle of visibility
 
