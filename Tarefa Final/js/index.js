@@ -31,10 +31,8 @@ var criaGround = function (){
     
     ground = new THREE.Mesh(
         new THREE.PlaneGeometry(2048, 2048, 25,25),
-        new THREE.MeshBasicMaterial({map : groundTexture})
+        new THREE.MeshStandardMaterial({map : groundTexture, normalMap : groundNormal})
     );
-
-    ground.material.normalMap = groundNormal
 
     ground.rotation.x -= Math.PI / 2;
     ground.position.y=-2;
@@ -73,8 +71,6 @@ var loadObj = function(){
             vaca.position.y = -1.5;
 
             vaca.rotation.y = 0.6
-
-            spotLight.target.position.set(vaca.position);
 
             mixer = new THREE.AnimationMixer( vaca );
 
@@ -186,24 +182,22 @@ var init = function() {
     camera.position.y = 30;
 
     //Iluminação 
-    spotLight = new THREE.SpotLight(0xffffff, 1);
-    spotLight.angle = 0.8;
-    spotLight.position.y = 40;
-    spotLight.position.z = 80;
-    spotLight.intensity = 1;
+    directionalLight = new THREE.DirectionalLight(0xffffff, 1, 1000);
+    directionalLight.position.y = 250;
+    directionalLight.position.z = 200
+    directionalLight.castShadow = true;
 
-    spotLight.castShadow = true;
-    spotLight.shadow.distance = 100;
-    spotLight.shadow.penumbra = 30;
-    spotLight.shadow.angle = 35;
+    directionalLight.shadow.mapSize.width = 4096;
+    directionalLight.shadow.mapSize.height = 4096;
+    directionalLight.shadow.camera.left = 1000;
+    directionalLight.shadow.camera.bottom = 1000;
+    directionalLight.shadow.camera.right = -1000
+    directionalLight.shadow.camera.top = -1000;
 
-    scene.add(spotLight);
+    scene.add(directionalLight);
+    scene.add(directionalLight.target);
 
-    //const helper = new THREE.CameraHelper( spotLight.shadow.camera );
-    //scene.add( helper );
-
-    //helperSpot = new THREE.SpotLightHelper(spotLight);
-    //scene.add(helperSpot);
+    //scene.add(new THREE.DirectionalLightHelper(directionalLight));
 
     pivot = new THREE.Group()
     pivot.position.x = 0
